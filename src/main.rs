@@ -64,8 +64,8 @@ fn read_file_as_bytes(file_path: &str) -> Vec<u8> {
 fn encode_data_to_frames(data: &[u8], output_folder: &str) {
     let mut data_with_size = Vec::new();
     let size = data.len() as u32;
-    data_with_size.extend(size.to_be_bytes()); // Agregar tamaño al inicio
-    data_with_size.extend(data); // Agregar datos originales
+    data_with_size.extend(size.to_be_bytes()); // Agregar el tamaño como los primeros 4 bytes
+    data_with_size.extend(data);
 
     let mut byte_index = 0;
     for frame_number in 0.. {
@@ -122,7 +122,7 @@ fn decode_data_from_frames(frames_folder: &str) -> Vec<u8> {
         }
     }
 
-    // Leer tamaño del archivo desde los primeros 4 bytes
+    // Leer el tamaño original del archivo (primeros 4 bytes)
     let size = u32::from_be_bytes([data[0], data[1], data[2], data[3]]) as usize;
     data[4..4 + size].to_vec()
 }
