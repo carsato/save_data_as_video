@@ -2,7 +2,9 @@ use std::fs::File;
 use std::io::Write;
 use image::open;
 
-const MACRO_PIXEL_SIZE: u32 = 1; // Tamaño de los bloques de píxeles (10x10)
+const MACRO_PIXEL_SIZE: u32 = 2; // Tamaño del macropíxel
+const FRAME_WIDTH: u32 = 640;    // Ancho del fotograma
+const FRAME_HEIGHT: u32 = 480;   // Alto del fotograma
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -29,10 +31,13 @@ fn decode_data_from_frames(folder: &str) -> Vec<u8> {
         let path = entry.unwrap().path();
         if path.extension().and_then(|ext| ext.to_str()) == Some("png") {
             let img = open(path).unwrap().into_rgb8();
-            let (width, height) = img.dimensions();
 
-            for row in (0..height).step_by(MACRO_PIXEL_SIZE as usize) {
-                for col in (0..width).step_by(MACRO_PIXEL_SIZE as usize) {
+            // Validar dimensiones del fotograma
+            assert_eq!(img.width(), FRAME_WIDTH, "El ancho del fotograma no coincide.");
+            assert_eq!(img.height(), FRAME_HEIGHT, "El alto del fotograma no coincide.");
+
+            for row in (0..FRAME_HEIGHT).step_by(MACRO_PIXEL_SIZE as usize) {
+                for col in (0..FRAME_WIDTH).step_by(MACRO_PIXEL_SIZE as usize) {
                     let pixel = img.get_pixel(col, row);
                     if pixel[0] > 128 {
                         bits.push(1); // Blanco
@@ -44,7 +49,7 @@ fn decode_data_from_frames(folder: &str) -> Vec<u8> {
         }
     }
 
-    // Leer el tamaño original del archivo desde los primeros 4 bytes (32 bits)
+    // Leer el tamaño original del archivo desde los primeros 32 bits
     let size = {
         let mut size_bits = bits.drain(0..32).collect::<Vec<u8>>();
         let mut size = 0u32;
@@ -54,7 +59,7 @@ fn decode_data_from_frames(folder: &str) -> Vec<u8> {
         size as usize
     };
 
-    // Convertir solo los bits necesarios en bytes
+    // Convertir los bits en bytes, respetando el tamaño original
     let mut bytes = Vec::new();
     for chunk in bits.chunks(8).take(size) {
         let mut byte = 0u8;
