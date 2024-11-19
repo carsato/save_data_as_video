@@ -65,7 +65,7 @@ fn encode_data_to_frames(data: &[u8], output_folder: &str) {
     let mut data_with_size = Vec::new();
     let size = data.len() as u32;
     data_with_size.extend(size.to_be_bytes()); // Agregar el tamaño como los primeros 4 bytes
-    data_with_size.extend(data);
+    data_with_size.extend(data); // Agregar los datos originales
 
     let mut byte_index = 0;
     for frame_number in 0.. {
@@ -78,7 +78,7 @@ fn encode_data_to_frames(data: &[u8], output_folder: &str) {
                 break;
             }
             let byte = data_with_size[byte_index];
-            *pixel = image::Rgb([byte, byte, byte]);
+            *pixel = image::Rgb([byte, byte, byte]); // Codificar en un píxel
             byte_index += 1;
         }
         let frame_path = format!("{}/frame_{:04}.png", output_folder, frame_number);
@@ -117,14 +117,14 @@ fn decode_data_from_frames(frames_folder: &str) -> Vec<u8> {
         if path.extension().and_then(|ext| ext.to_str()) == Some("png") {
             let img = open(path).unwrap().into_rgb8();
             for pixel in img.pixels() {
-                data.push(pixel[0]);
+                data.push(pixel[0]); // Leer el canal rojo del píxel
             }
         }
     }
 
-    // Leer el tamaño original del archivo (primeros 4 bytes)
+    // Leer el tamaño del archivo desde los primeros 4 bytes
     let size = u32::from_be_bytes([data[0], data[1], data[2], data[3]]) as usize;
-    data[4..4 + size].to_vec()
+    data[4..4 + size].to_vec() // Extraer solo los datos originales
 }
 
 fn write_bytes_to_file(file_path: &str, data: &[u8]) {
