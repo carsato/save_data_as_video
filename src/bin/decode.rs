@@ -44,9 +44,19 @@ fn decode_data_from_frames(folder: &str) -> Vec<u8> {
         }
     }
 
-    // Convertir bits a bytes
+    // Leer el tamaño original del archivo desde los primeros 4 bytes (32 bits)
+    let size = {
+        let mut size_bits = bits.drain(0..32).collect::<Vec<u8>>();
+        let mut size = 0u32;
+        for bit in size_bits.drain(..) {
+            size = (size << 1) | (bit as u32);
+        }
+        size as usize
+    };
+
+    // Convertir solo los bits necesarios en bytes
     let mut bytes = Vec::new();
-    for chunk in bits.chunks(8) {
+    for chunk in bits.chunks(8).take(size) {
         let mut byte = 0u8;
         for (i, bit) in chunk.iter().enumerate() {
             byte |= bit << (7 - i);

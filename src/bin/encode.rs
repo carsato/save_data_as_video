@@ -29,13 +29,21 @@ fn read_file_as_binary(file_path: &str) -> Vec<u8> {
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).expect("No se pudo leer el archivo");
 
-    // Convertir cada byte a bits individuales
     let mut bits = Vec::new();
+
+    // Agregar el tamaño del archivo como los primeros 4 bytes (32 bits)
+    let size = buffer.len() as u32;
+    bits.extend(size.to_be_bytes().iter().flat_map(|&byte| {
+        (0..8).rev().map(move |bit| (byte >> bit) & 1)
+    }));
+
+    // Convertir cada byte a bits individuales
     for byte in buffer {
         for bit in (0..8).rev() {
-            bits.push((byte >> bit) & 1); // Extraer cada bit (0 o 1)
+            bits.push((byte >> bit) & 1);
         }
     }
+
     bits
 }
 
