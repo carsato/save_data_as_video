@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use image::open;
 
-const MACRO_PIXEL_SIZE: u32 = 10; // Tamaño de los bloques de píxeles (10x10)
+const MACRO_PIXEL_SIZE: u32 = 1; // Tamaño de los bloques de píxeles (10x10)
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
