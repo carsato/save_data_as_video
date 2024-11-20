@@ -45,7 +45,7 @@ fn main() {
 
 fn extract_frames_from_video(input_video: &str, frames_folder: &str) {
     let ffmpeg_command = format!(
-        "ffmpeg -i {} {}/frame_%04d.png",
+        "ffmpeg -i {} -start_number 0 {}/frame_%04d.png",
         input_video, frames_folder
     );
 
