@@ -5,7 +5,7 @@ use std::env;
 use std::process::Command;
 use image::open;
 
-const MACRO_PIXEL_SIZE: u32 = 1; // Tamaño del macropíxel (bloque)
+const MACRO_PIXEL_SIZE: u32 = 10; // Tamaño del macropíxel (bloque)
 const FRAME_WIDTH: u32 = 640;    // Ancho del fotograma
 const FRAME_HEIGHT: u32 = 480;   // Alto del fotograma
 

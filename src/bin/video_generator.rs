@@ -3,7 +3,7 @@ use std::env;
 use image::open;
 use std::fs;
 
-const MACRO_PIXEL_SIZE: u32 = 1; // Tamaño del macropíxel (ajustable según encode.rs)
+const MACRO_PIXEL_SIZE: u32 = 10; // Tamaño del macropíxel (ajustable según encode.rs)
 const FRAME_WIDTH: u32 = 640;    // Ancho del fotograma
 const FRAME_HEIGHT: u32 = 480;   // Alto del fotograma
 
