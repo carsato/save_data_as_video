@@ -24,26 +24,36 @@ fn main() {
     println!("Archivo reconstruido: {}", output_file);
 }
 
+fn get_sorted_frames(folder: &str) -> Vec<std::path::PathBuf> {
+    let mut entries: Vec<_> = std::fs::read_dir(folder)
+        .unwrap()
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("png"))
+        .collect();
+
+    // Ordenar los fotogramas por nombre (naturalmente: frame_0000, frame_0001, ...)
+    entries.sort();
+    entries
+}
+
 fn decode_data_from_frames(folder: &str) -> Vec<u8> {
     let mut bits = Vec::new();
 
-    for entry in std::fs::read_dir(folder).unwrap() {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|ext| ext.to_str()) == Some("png") {
-            let img = open(path).unwrap().into_rgb8();
-
-            // Validar dimensiones del fotograma
-            assert_eq!(img.width(), FRAME_WIDTH, "El ancho del fotograma no coincide.");
-            assert_eq!(img.height(), FRAME_HEIGHT, "El alto del fotograma no coincide.");
-
-            for row in (0..FRAME_HEIGHT).step_by(MACRO_PIXEL_SIZE as usize) {
-                for col in (0..FRAME_WIDTH).step_by(MACRO_PIXEL_SIZE as usize) {
-                    let pixel = img.get_pixel(col, row);
-                    if pixel[0] > 128 {
-                        bits.push(1); // Blanco
-                    } else {
-                        bits.push(0); // Negro
-                    }
+    for path in get_sorted_frames(folder) {
+        let img = open(path).unwrap().into_rgb8();
+    
+        // Validar dimensiones del fotograma
+        assert_eq!(img.width(), FRAME_WIDTH, "El ancho del fotograma no coincide.");
+        assert_eq!(img.height(), FRAME_HEIGHT, "El alto del fotograma no coincide.");
+    
+        for row in (0..FRAME_HEIGHT).step_by(MACRO_PIXEL_SIZE as usize) {
+            for col in (0..FRAME_WIDTH).step_by(MACRO_PIXEL_SIZE as usize) {
+                let pixel = img.get_pixel(col, row);
+                if pixel[0] > 128 {
+                    bits.push(1); // Blanco
+                } else {
+                    bits.push(0); // Negro
                 }
             }
         }
