@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use image::open;
 
-const MACRO_PIXEL_SIZE: u32 = 2; // Tamaño del macropíxel
+const MACRO_PIXEL_SIZE: u32 = 1; // Tamaño del macropíxel
 const FRAME_WIDTH: u32 = 640;    // Ancho del fotograma
 const FRAME_HEIGHT: u32 = 480;   // Alto del fotograma
 

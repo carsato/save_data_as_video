@@ -2,7 +2,7 @@ use std::fs::{File, create_dir_all};
 use std::io::Read;
 use image::{ImageBuffer, RgbImage, Rgb};
 
-const MACRO_PIXEL_SIZE: u32 = 2; // Tamaño de los bloques de píxeles (10x10)
+const MACRO_PIXEL_SIZE: u32 = 1; // Tamaño de los bloques de píxeles (10x10)
 const FRAME_WIDTH: u32 = 640; // Ancho del fotograma
 const FRAME_HEIGHT: u32 = 480; // Alto del fotograma
 
