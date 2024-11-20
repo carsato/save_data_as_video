@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::env;
@@ -19,15 +20,27 @@ fn main() {
     let frames_folder = &args[2];
     let output_file = &args[3];
 
+    // Crear carpeta para los fotogramas si no existe
+    if let Err(e) = fs::create_dir_all(frames_folder) {
+        eprintln!("Error al crear la carpeta de fotogramas: {}", e);
+        return;
+    }
+
     // Extraer fotogramas del vídeo
     extract_frames_from_video(input_video, frames_folder);
 
     // Decodificar los datos de los fotogramas
-    let data = decode_data_from_frames(frames_folder);
-
-    // Escribir los datos en un archivo
-    write_bytes_to_file(output_file, &data);
-    println!("Archivo reconstruido: {}", output_file);
+    match decode_data_from_frames(frames_folder) {
+        Ok(data) => {
+            // Escribir los datos en un archivo
+            write_bytes_to_file(output_file, &data);
+            println!("Archivo reconstruido: {}", output_file);
+        }
+        Err(e) => {
+            // Manejar el error
+            eprintln!("Error al decodificar los fotogramas: {}", e);
+        }
+    }
 }
 
 fn extract_frames_from_video(input_video: &str, frames_folder: &str) {
@@ -49,26 +62,36 @@ fn extract_frames_from_video(input_video: &str, frames_folder: &str) {
     }
 }
 
-fn decode_data_from_frames(folder: &str) -> Vec<u8> {
+fn decode_data_from_frames(folder: &str) -> Result<Vec<u8>, String> {
     let mut bits = Vec::new();
 
-    for entry in std::fs::read_dir(folder).unwrap() {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|ext| ext.to_str()) == Some("png") {
-            let img = open(path).unwrap().into_rgb8();
+    // Obtener y ordenar los archivos de la carpeta
+    let mut entries: Vec<_> = std::fs::read_dir(folder)
+        .map_err(|e| format!("Error leyendo la carpeta: {}", e))?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("png"))
+        .collect();
 
-            // Validar dimensiones del fotograma
-            assert_eq!(img.width(), FRAME_WIDTH, "El ancho del fotograma no coincide.");
-            assert_eq!(img.height(), FRAME_HEIGHT, "El alto del fotograma no coincide.");
+    entries.sort(); // Ordenar los archivos por nombre
 
-            for row in (0..FRAME_HEIGHT).step_by(MACRO_PIXEL_SIZE as usize) {
-                for col in (0..FRAME_WIDTH).step_by(MACRO_PIXEL_SIZE as usize) {
-                    let pixel = img.get_pixel(col, row);
-                    if pixel[0] > 128 {
-                        bits.push(1); // Blanco
-                    } else {
-                        bits.push(0); // Negro
-                    }
+    for path in entries {
+        let img = open(&path)
+            .map_err(|e| format!("Error abriendo el archivo {}: {}", path.display(), e))?
+            .into_rgb8();
+
+        // Validar dimensiones del fotograma
+        if img.width() != FRAME_WIDTH || img.height() != FRAME_HEIGHT {
+            return Err(format!("Dimensiones incorrectas en el fotograma {}", path.display()));
+        }
+
+        for row in (0..FRAME_HEIGHT).step_by(MACRO_PIXEL_SIZE as usize) {
+            for col in (0..FRAME_WIDTH).step_by(MACRO_PIXEL_SIZE as usize) {
+                let pixel = img.get_pixel(col, row);
+                if pixel[0] > 128 {
+                    bits.push(1); // Blanco
+                } else {
+                    bits.push(0); // Negro
                 }
             }
         }
@@ -93,7 +116,7 @@ fn decode_data_from_frames(folder: &str) -> Vec<u8> {
         }
         bytes.push(byte);
     }
-    bytes
+    Ok(bytes)
 }
 
 fn write_bytes_to_file(file_path: &str, data: &[u8]) {
